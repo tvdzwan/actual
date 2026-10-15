@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
+import { Input } from '@actual-app/components/input';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { spacing } from '@actual-app/components/tokens';
@@ -181,10 +182,22 @@ function ServerFeatureToggle({
 export function ExperimentalFeatures() {
   const { t } = useTranslation();
   const goalTemplatesEnabled = useFeatureFlag('goalTemplatesEnabled');
+  const salaryDayEnabled = useFeatureFlag('salaryDay');
+  const [salaryDay = '25', setSalaryDayPref] = useSyncedPref('salary-day');
   const [, setGoalTemplatesUIPref] = useSyncedPref(
     'flags.goalTemplatesUIEnabled',
   );
   const isUsingServer = useSyncServerStatus() !== 'no-server';
+
+  function onChangeSalaryDay(value: string) {
+    const parsed = Number(value);
+    if (value.trim() === '' || !Number.isFinite(parsed)) {
+      return;
+    }
+
+    const normalized = Math.min(31, Math.max(1, Math.round(parsed)));
+    setSalaryDayPref(String(normalized));
+  }
 
   const showServerPrefs =
     localStorage.getItem('devEnableServerPrefs') === 'true';
@@ -212,6 +225,37 @@ export function ExperimentalFeatures() {
         }
       >
         <Trans>Goal templates</Trans>
+      </FeatureToggle>
+      <FeatureToggle
+        flag="salaryDay"
+        note={
+          <Trans>
+            Enables a salary-day budget cycle. Future salary-day budget logic uses
+            this exact day when it is active.
+          </Trans>
+        }
+        subFeatures={
+          salaryDayEnabled && (
+            <SettingsRow
+              htmlFor="salary-day-input"
+              title={t('Exact salary day')}
+              isNested
+              control={
+                <Input
+                  id="salary-day-input"
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={salaryDay || '25'}
+                  onChangeValue={onChangeSalaryDay}
+                  style={{ width: 70 }}
+                />
+              }
+            />
+          )
+        }
+      >
+        <Trans>Salary-day budgeting</Trans>
       </FeatureToggle>
       <FeatureToggle
         flag="actionTemplating"
