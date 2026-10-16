@@ -403,24 +403,27 @@ export function normalizeSalaryDay(
 }
 
 export function salaryMonth(date: DateLike, salaryDay = 25): string {
-  return salaryPeriodMonth(date, salaryDay);
-}
-
-export function salaryPeriodMonth(date: DateLike, salaryDay = 25): string {
   const parsedDate = _parse(date);
   const normalizedDay = normalizeSalaryDay(salaryDay);
   const monthDate =
-    parsedDate.getDate() < normalizedDay
-      ? d.subMonths(parsedDate, 1)
+    parsedDate.getDate() >= normalizedDay
+      ? d.addMonths(parsedDate, 1)
       : parsedDate;
 
   return monthFromDate(monthDate);
 }
 
+export function salaryPeriodMonth(date: DateLike, salaryDay = 25): string {
+  return salaryMonth(date, salaryDay);
+}
+
 export function salaryPeriodStart(date: DateLike, salaryDay = 25): string {
-  const month = salaryPeriodMonth(date, salaryDay);
+  const parsedDate = _parse(date);
   const normalizedDay = normalizeSalaryDay(salaryDay);
-  const monthDate = _parse(month);
+  const monthDate =
+    parsedDate.getDate() >= normalizedDay
+      ? parsedDate
+      : d.subMonths(parsedDate, 1);
 
   return dayFromDate(
     new Date(

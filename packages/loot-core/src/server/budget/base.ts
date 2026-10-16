@@ -57,7 +57,12 @@ function getBudgetMonthBounds(month: string) {
   const [year, monthIndex] = month.split('-').map(Number);
   const lastDay = new Date(year, monthIndex, 0).getDate();
   const anchorDay = Math.min(salaryDay, lastDay);
-  const anchor = `${year}-${String(monthIndex).padStart(2, '0')}-${String(anchorDay).padStart(2, '0')}`;
+  const anchor = new Date(
+    year,
+    monthIndex - 2,
+    anchorDay,
+    12,
+  );
   const periodStart = monthUtils.salaryPeriodStart(anchor, salaryDay);
   const periodEnd = monthUtils.salaryPeriodEnd(anchor, salaryDay);
 
