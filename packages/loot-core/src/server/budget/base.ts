@@ -54,8 +54,12 @@ function getBudgetMonthBounds(month: string) {
     return monthUtils.bounds(month);
   }
 
-  const periodStart = monthUtils.salaryPeriodStart(`${month}-15`, salaryDay);
-  const periodEnd = monthUtils.salaryPeriodEnd(`${month}-15`, salaryDay);
+  const [year, monthIndex] = month.split('-').map(Number);
+  const lastDay = new Date(year, monthIndex, 0).getDate();
+  const anchorDay = Math.min(salaryDay, lastDay);
+  const anchor = `${year}-${String(monthIndex).padStart(2, '0')}-${String(anchorDay).padStart(2, '0')}`;
+  const periodStart = monthUtils.salaryPeriodStart(anchor, salaryDay);
+  const periodEnd = monthUtils.salaryPeriodEnd(anchor, salaryDay);
 
   return {
     start: parseInt(periodStart.replace(/-/g, '')),
@@ -485,7 +489,7 @@ export async function createAllBudgets() {
   );
   const earliestDate =
     earliestTransaction && db.fromDateRepr(earliestTransaction.date);
-  const currentMonth = getBudgetMonth(monthUtils.currentMonth());
+  const currentMonth = getBudgetMonth(monthUtils.currentDate());
 
   // Get the range based off of the earliest transaction and the
   // current month. If no transactions currently exist the current

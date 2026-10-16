@@ -38,7 +38,8 @@ import { TrackingBudgetProvider } from './tracking/TrackingBudgetContext';
 import { prewarmAllMonths, prewarmMonth } from './util';
 
 export function Budget() {
-  const currentMonth = monthUtils.currentMonth();
+  const currentDate = monthUtils.currentDate();
+  const currentMonth = monthUtils.monthFromDate(currentDate);
   const salaryDayEnabled = useFeatureFlag('salaryDay');
   const [salaryDay = '25'] = useSyncedPref('salary-day');
   const spreadsheet = useSpreadsheet();
