@@ -124,7 +124,7 @@ describe('Base budget', () => {
     },
   );
 
-  it('groups salary transactions into the previous salary month before the chosen day', async () => {
+  it('keeps salary transactions in the current salary month before the chosen day', async () => {
     await sheet.loadSpreadsheet(db);
     global.currentMonth = '2026-10';
     global.currentDate = '2026-10-14';
@@ -163,10 +163,10 @@ describe('Base budget', () => {
 
     expect(
       sheet.getCellValue(monthUtils.sheetForMonth('2026-09'), `sum-amount-${catId}`),
-    ).toBe(20000);
+    ).toBe(0);
     expect(
       sheet.getCellValue(monthUtils.sheetForMonth('2026-10'), `sum-amount-${catId}`),
-    ).toBe(0);
+    ).toBe(20000);
   });
 
   it('recomputes the salary months when a transaction crosses the cutoff date', async () => {
@@ -207,23 +207,23 @@ describe('Base budget', () => {
     await sheet.waitOnSpreadsheet();
     expect(
       sheet.getCellValue(monthUtils.sheetForMonth('2026-09'), `sum-amount-${catId}`),
-    ).toBe(20000);
+    ).toBe(0);
     expect(
       sheet.getCellValue(monthUtils.sheetForMonth('2026-10'), `sum-amount-${catId}`),
-    ).toBe(0);
+    ).toBe(20000);
 
     await db.updateTransaction({ id, date: '2026-10-16' });
     await sheet.waitOnSpreadsheet();
 
     expect(
-      sheet.getCellValue(monthUtils.sheetForMonth('2026-09'), `sum-amount-${catId}`),
+      sheet.getCellValue(monthUtils.sheetForMonth('2026-10'), `sum-amount-${catId}`),
     ).toBe(0);
     expect(
-      sheet.getCellValue(monthUtils.sheetForMonth('2026-10'), `sum-amount-${catId}`),
+      sheet.getCellValue(monthUtils.sheetForMonth('2026-11'), `sum-amount-${catId}`),
     ).toBe(20000);
   });
 
-  it('keeps a transaction before the salary day out of the current salary month', async () => {
+  it('keeps a transaction before the salary day in the current salary month', async () => {
     await sheet.loadSpreadsheet(db);
     global.currentMonth = '2026-10';
     global.currentDate = '2026-10-16';
@@ -262,13 +262,13 @@ describe('Base budget', () => {
 
     expect(
       sheet.getCellValue(monthUtils.sheetForMonth('2026-08'), `sum-amount-${catId}`),
-    ).toBe(20000);
+    ).toBe(0);
     expect(
       sheet.getCellValue(monthUtils.sheetForMonth('2026-09'), `sum-amount-${catId}`),
-    ).toBe(0);
+    ).toBe(20000);
   });
 
-  it('groups salary transactions into the current salary month on or after the chosen day', async () => {
+  it('groups salary transactions into the next salary month on or after the chosen day', async () => {
     await sheet.loadSpreadsheet(db);
     global.currentMonth = '2026-10';
     global.currentDate = '2026-10-16';
@@ -306,10 +306,10 @@ describe('Base budget', () => {
     await sheet.waitOnSpreadsheet();
 
     expect(
-      sheet.getCellValue(monthUtils.sheetForMonth('2026-09'), `sum-amount-${catId}`),
+      sheet.getCellValue(monthUtils.sheetForMonth('2026-10'), `sum-amount-${catId}`),
     ).toBe(0);
     expect(
-      sheet.getCellValue(monthUtils.sheetForMonth('2026-10'), `sum-amount-${catId}`),
+      sheet.getCellValue(monthUtils.sheetForMonth('2026-11'), `sum-amount-${catId}`),
     ).toBe(20000);
   });
 

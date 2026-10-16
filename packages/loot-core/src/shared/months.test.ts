@@ -86,17 +86,17 @@ test('isCurrentDay matches valid local dates on the current day', () => {
 });
 
 test('salaryMonth exposes the salary-day cutoff as the active budget month', () => {
-  expect(monthUtils.salaryMonth('2026-02-10', 15)).toBe('2026-01');
-  expect(monthUtils.salaryMonth('2026-02-15', 15)).toBe('2026-02');
-  expect(monthUtils.salaryMonth('2026-03-14', 15)).toBe('2026-02');
-  expect(monthUtils.salaryMonth('2026-03-15', 15)).toBe('2026-03');
+  expect(monthUtils.salaryMonth('2026-02-10', 15)).toBe('2026-02');
+  expect(monthUtils.salaryMonth('2026-02-15', 15)).toBe('2026-03');
+  expect(monthUtils.salaryMonth('2026-03-14', 15)).toBe('2026-03');
+  expect(monthUtils.salaryMonth('2026-03-15', 15)).toBe('2026-04');
 });
 
-test('salaryPeriodMonth uses the salary day as the cutoff for the active period', () => {
-  expect(monthUtils.salaryPeriodMonth('2026-02-10', 15)).toBe('2026-01');
-  expect(monthUtils.salaryPeriodMonth('2026-02-15', 15)).toBe('2026-02');
-  expect(monthUtils.salaryPeriodMonth('2026-03-14', 15)).toBe('2026-02');
-  expect(monthUtils.salaryPeriodMonth('2026-03-15', 15)).toBe('2026-03');
+test('salaryPeriodMonth uses the salary day as the start of the active period', () => {
+  expect(monthUtils.salaryPeriodMonth('2026-02-10', 15)).toBe('2026-02');
+  expect(monthUtils.salaryPeriodMonth('2026-02-15', 15)).toBe('2026-03');
+  expect(monthUtils.salaryPeriodMonth('2026-03-14', 15)).toBe('2026-03');
+  expect(monthUtils.salaryPeriodMonth('2026-03-15', 15)).toBe('2026-04');
 });
 
 test('salaryPeriodStart and salaryPeriodEnd define the pay-cycle month boundaries', () => {
