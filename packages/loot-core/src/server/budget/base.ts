@@ -17,9 +17,55 @@ export function getBudgetType() {
   return meta.budgetType || 'envelope';
 }
 
+function getSalaryDayPreference() {
+  const enabled = db.firstSync<Pick<db.DbPreference, 'value'>>(
+    `SELECT value FROM preferences WHERE id = ?`,
+    ['flags.salaryDay'],
+  );
+  const salaryDayPref = db.firstSync<Pick<db.DbPreference, 'value'>>(
+    `SELECT value FROM preferences WHERE id = ?`,
+    ['salary-day'],
+  );
+
+  if (!enabled || String(enabled.value) !== 'true') {
+    return {
+      enabled: false,
+      salaryDay: 25,
+    };
+  }
+
+  const salaryDay = Number(salaryDayPref?.value ?? 25);
+  return {
+    enabled: true,
+    salaryDay: monthUtils.normalizeSalaryDay(salaryDay, 25),
+  };
+}
+
+function getBudgetMonth(date: string | Date): string {
+  const { enabled, salaryDay } = getSalaryDayPreference();
+  return enabled
+    ? monthUtils.salaryMonth(date, salaryDay)
+    : monthUtils.monthFromDate(date);
+}
+
+function getBudgetMonthBounds(month: string) {
+  const { enabled, salaryDay } = getSalaryDayPreference();
+  if (!enabled) {
+    return monthUtils.bounds(month);
+  }
+
+  const periodStart = monthUtils.salaryPeriodStart(`${month}-15`, salaryDay);
+  const periodEnd = monthUtils.salaryPeriodEnd(`${month}-15`, salaryDay);
+
+  return {
+    start: parseInt(periodStart.replace(/-/g, '')),
+    end: parseInt(periodEnd.replace(/-/g, '')),
+  };
+}
+
 export function getBudgetRange(start: string, end: string) {
-  start = monthUtils.getMonth(start);
-  end = monthUtils.getMonth(end);
+  start = getBudgetMonth(start);
+  end = getBudgetMonth(end);
 
   // The start date should never be after the end date. If that
   // happened, the month range might be a valid range and weird
@@ -53,9 +99,12 @@ function getMonthSpanBounds(months: string[]) {
     }
   }
 
+  const firstBounds = getBudgetMonthBounds(firstMonth);
+  const lastBounds = getBudgetMonthBounds(lastMonth);
+
   return {
-    rangeStart: monthUtils.bounds(firstMonth).start,
-    rangeEnd: monthUtils.bounds(lastMonth).end,
+    rangeStart: firstBounds.start,
+    rangeEnd: lastBounds.end,
   };
 }
 
@@ -70,6 +119,10 @@ function getSumAmountsByMonth(
   rangeStart: number,
   rangeEnd: number,
 ): Map<string, number> {
+  if (getSalaryDayPreference().enabled) {
+    return new Map();
+  }
+
   const rows = db.runQuery<{ month: number; category: string; amount: number }>(
     `SELECT t.category AS category,
             t.date / 100 AS month,
@@ -98,6 +151,10 @@ function getSumAmountsByMonth(
 // skips recomputing these and caches them directly instead.
 export async function reseedSumAmounts(months: string[]): Promise<string[]> {
   if (months.length === 0) {
+    return [];
+  }
+
+  if (getSalaryDayPreference().enabled) {
     return [];
   }
 
@@ -190,7 +247,7 @@ function handleTransactionChange(transaction, changedFields) {
     transaction.date &&
     transaction.category
   ) {
-    const month = monthUtils.monthFromDate(db.fromDateRepr(transaction.date));
+    const month = getBudgetMonth(db.fromDateRepr(transaction.date));
     const sheetName = monthUtils.sheetForMonth(month);
 
     sheet
@@ -361,7 +418,7 @@ export async function createBudget(months) {
 
   monthsToCreate.forEach(month => {
     const prevMonth = monthUtils.prevMonth(month);
-    const { start, end } = monthUtils.bounds(month);
+    const { start, end } = getBudgetMonthBounds(month);
     const sheetName = monthUtils.sheetForMonth(month);
     const prevSheetName = monthUtils.sheetForMonth(prevMonth);
     const dbMonth = parseInt(month.replace('-', ''));
@@ -371,7 +428,10 @@ export async function createBudget(months) {
       // skips its per-category query. Only happens on a cold build, when
       // the value hasn't been restored from cache.
       const sumCell = `sum-amount-${cat.id}`;
-      if (sheet.get().getCellValueLoose(sheetName, sumCell) == null) {
+      if (
+        !getSalaryDayPreference().enabled &&
+        sheet.get().getCellValueLoose(sheetName, sumCell) == null
+      ) {
         const name = resolveName(sheetName, sumCell);
         sheet
           .get()
@@ -425,7 +485,7 @@ export async function createAllBudgets() {
   );
   const earliestDate =
     earliestTransaction && db.fromDateRepr(earliestTransaction.date);
-  const currentMonth = monthUtils.currentMonth();
+  const currentMonth = getBudgetMonth(monthUtils.currentMonth());
 
   // Get the range based off of the earliest transaction and the
   // current month. If no transactions currently exist the current

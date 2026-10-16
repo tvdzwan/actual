@@ -10,6 +10,50 @@ beforeEach(() => {
 });
 
 describe('Base budget', () => {
+  it('groups salary transactions into the previous salary month before the chosen day', async () => {
+    await sheet.loadSpreadsheet(db);
+    global.currentMonth = '2026-10';
+    await db.runQuery(
+      `INSERT INTO preferences (id, value) VALUES ('flags.salaryDay', 'true')`,
+      [],
+    );
+    await db.runQuery(
+      `INSERT INTO preferences (id, value) VALUES ('salary-day', '15')`,
+      [],
+    );
+
+    await db.insertCategoryGroup({ id: 'group1', name: 'group1' });
+    await db.insertCategoryGroup({
+      id: 'income-group',
+      name: 'income',
+      is_income: 1,
+    });
+    const catId = await db.insertCategory({
+      name: 'salary',
+      cat_group: 'group1',
+      is_income: 1,
+    });
+
+    await db.insertAccount({ id: 'account1', name: 'Account 1' });
+
+    await createAllBudgets();
+    await db.insertTransaction({
+      date: '2026-10-14',
+      amount: 20000,
+      account: 'account1',
+      category: catId,
+    });
+
+    await sheet.waitOnSpreadsheet();
+
+    expect(
+      sheet.getCellValue(monthUtils.sheetForMonth('2026-09'), `sum-amount-${catId}`),
+    ).toBe(20000);
+    expect(
+      sheet.getCellValue(monthUtils.sheetForMonth('2026-10'), `sum-amount-${catId}`),
+    ).toBe(0);
+  });
+
   it('Recomputes budget cells when account fields change', async () => {
     await sheet.loadSpreadsheet(db);
 

@@ -382,6 +382,59 @@ export function getMonthIndex(month: string): number {
   return parseInt(month.slice(5, 7)) - 1;
 }
 
+export function normalizeSalaryDay(
+  day: number | string | null | undefined,
+  fallback = 25,
+): number {
+  if (day === null || day === undefined || day === '') {
+    return fallback;
+  }
+
+  const parsed = Number(day);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(31, Math.max(1, Math.round(parsed)));
+}
+
+export function salaryMonth(date: DateLike, salaryDay = 25): string {
+  return salaryPeriodMonth(date, salaryDay);
+}
+
+export function salaryPeriodMonth(date: DateLike, salaryDay = 25): string {
+  const parsedDate = _parse(date);
+  const normalizedDay = normalizeSalaryDay(salaryDay);
+  const monthDate =
+    parsedDate.getDate() < normalizedDay
+      ? d.subMonths(parsedDate, 1)
+      : parsedDate;
+
+  return monthFromDate(monthDate);
+}
+
+export function salaryPeriodStart(date: DateLike, salaryDay = 25): string {
+  const month = salaryPeriodMonth(date, salaryDay);
+  const normalizedDay = normalizeSalaryDay(salaryDay);
+  const monthDate = _parse(month);
+
+  return dayFromDate(
+    new Date(
+      monthDate.getFullYear(),
+      monthDate.getMonth(),
+      normalizedDay,
+      12,
+    ),
+  );
+}
+
+export function salaryPeriodEnd(date: DateLike, salaryDay = 25): string {
+  const start = _parse(salaryPeriodStart(date, salaryDay));
+  const nextPeriodStart = d.addMonths(start, 1);
+
+  return dayFromDate(d.subDays(nextPeriodStart, 1));
+}
+
 export function getYear(month: string): string {
   return month.slice(0, 4);
 }

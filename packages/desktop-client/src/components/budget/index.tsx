@@ -22,6 +22,7 @@ import {
   useSortCategoriesMutation,
 } from '#budget';
 import { useCategories } from '#hooks/useCategories';
+import { useFeatureFlag } from '#hooks/useFeatureFlag';
 import { useGlobalPref } from '#hooks/useGlobalPref';
 import { useLocalPref } from '#hooks/useLocalPref';
 import { useNavigate } from '#hooks/useNavigate';
@@ -38,13 +39,19 @@ import { prewarmAllMonths, prewarmMonth } from './util';
 
 export function Budget() {
   const currentMonth = monthUtils.currentMonth();
+  const salaryDayEnabled = useFeatureFlag('salaryDay');
+  const [salaryDay = '25'] = useSyncedPref('salary-day');
   const spreadsheet = useSpreadsheet();
   const navigate = useNavigate();
   const [summaryCollapsed, setSummaryCollapsedPref] = useLocalPref(
     'budget.summaryCollapsed',
   );
   const [startMonthPref, setStartMonthPref] = useLocalPref('budget.startMonth');
-  const startMonth = startMonthPref || currentMonth;
+  const budgetCurrentMonth =
+    salaryDayEnabled && Number.isFinite(Number(salaryDay))
+      ? monthUtils.salaryMonth(currentMonth, Number(salaryDay))
+      : currentMonth;
+  const startMonth = startMonthPref || budgetCurrentMonth;
   const [bounds, setBounds] = useState({
     start: startMonth,
     end: startMonth,
