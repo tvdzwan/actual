@@ -230,8 +230,9 @@ export function ExperimentalFeatures() {
         flag="salaryDay"
         note={
           <Trans>
-            Enables a salary-day budget cycle. Future salary-day budget logic uses
-            this exact day when it is active.
+            Enables a 'Salary Month' based budget cycle. Based on the configured start day the budget for a month runs from
+            that day to the next month on that day. For example, October budget is realised from 25th of September until the
+            25th of October.
           </Trans>
         }
         subFeatures={
