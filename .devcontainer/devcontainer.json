@@ -7,5 +7,13 @@
   // "image": "mcr.microsoft.com/devcontainers/typescript-node:0-16",
   "service": "actual-development",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "postCreateCommand": "yarn install"
+  "postCreateCommand": "yarn install",
+
+  // 💡 Forces Podman to apply keep-id to the compose cluster safely:
+  "containerEnv": {
+    "PODMAN_USERNS": "keep-id"
+  },
+  "remoteEnv": {
+    "PODMAN_USERNS": "keep-id"
+  }
 }
