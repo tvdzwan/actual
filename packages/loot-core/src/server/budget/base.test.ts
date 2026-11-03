@@ -6,8 +6,18 @@ import * as monthUtils from '#shared/months';
 import { setBudget, setCategoryCarryover } from './actions';
 import { createAllBudgets, getBudgetRange } from './base';
 
+let originalCurrentMonth = global.currentMonth;
+let originalCurrentDate = global.currentDate;
+
 beforeEach(() => {
+  originalCurrentMonth = global.currentMonth;
+  originalCurrentDate = global.currentDate;
   return global.emptyDatabase()();
+});
+
+afterEach(() => {
+  global.currentMonth = originalCurrentMonth;
+  global.currentDate = originalCurrentDate;
 });
 
 describe('getBudgetRange', () => {
