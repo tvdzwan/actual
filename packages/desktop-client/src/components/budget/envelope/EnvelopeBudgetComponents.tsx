@@ -148,7 +148,9 @@ export const ExpenseGroupMonth = memo(function ExpenseGroupMonth({
   group,
 }: CategoryGroupMonthProps) {
   const { id } = group;
-  const [showHiddenCategories] = useLocalPref('budget.showHiddenCategories');
+  const [showHiddenCategories = false] = useLocalPref(
+    'budget.showHiddenCategories',
+  );
   const hiddenCategoryTotals = useHiddenCategoryTotals(
     month,
     group.categories ?? [],

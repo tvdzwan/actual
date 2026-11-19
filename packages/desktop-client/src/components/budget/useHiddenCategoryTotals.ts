@@ -12,7 +12,7 @@ export type HiddenCategoryTotals = {
 };
 
 export function getHiddenCategoryAdjustment(
-  budgetType: 'envelope' | 'tracking',
+  budgetType: string,
   showHiddenCategories: boolean,
 ) {
   if (budgetType === 'tracking') {
