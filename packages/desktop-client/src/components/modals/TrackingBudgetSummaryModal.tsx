@@ -45,6 +45,7 @@ export function TrackingBudgetSummaryModal({
             <ExpenseTotal style={{ ...styles.mediumText }} />
           </SpaceBetween>
           <Saved
+            month={month}
             projected={month >= currentMonth}
             style={{ ...styles.mediumText, marginTop: spacing.xl }}
           />

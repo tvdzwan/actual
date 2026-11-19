@@ -262,10 +262,11 @@ export function BudgetSummary({ month }: BudgetSummaryProps) {
               borderTop: '1px solid ' + theme.tableBorder,
             }}
           >
-            <Saved projected={month >= currentMonth} />
+            <Saved month={month} projected={month >= currentMonth} />
           </View>
         ) : (
           <Saved
+            month={month}
             projected={month >= currentMonth}
             style={{ marginTop: 13, marginBottom: 20 }}
           />

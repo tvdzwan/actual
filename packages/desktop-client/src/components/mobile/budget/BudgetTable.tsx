@@ -19,6 +19,7 @@ import type {
 } from '@actual-app/core/types/models';
 import { AutoTextSize } from 'auto-text-size';
 
+import { useTrackingSavingsAdjustment } from '#components/budget/useHiddenCategoryTotals';
 import { MOBILE_NAV_HEIGHT } from '#components/mobile/MobileNavTabs';
 import { PullToRefresh } from '#components/mobile/PullToRefresh';
 import { PrivacyFilter } from '#components/PrivacyFilter';
@@ -142,17 +143,21 @@ function ToBudget({ toBudget, onPress, show3Columns }: ToBudgetProps) {
 
 type SavedProps = {
   projected: boolean;
+  month: string;
   onPress: () => void;
   show3Columns: boolean;
 };
 
-function Saved({ projected, onPress, show3Columns }: SavedProps) {
+function Saved({ projected, month, onPress, show3Columns }: SavedProps) {
   const { t } = useTranslation();
+  const adjustment = useTrackingSavingsAdjustment(month);
   const binding = projected
     ? trackingBudget.totalBudgetedSaved
     : trackingBudget.totalSaved;
 
-  const saved = useSheetValue<'tracking-budget', typeof binding>(binding) || 0;
+  const saved =
+    (useSheetValue<'tracking-budget', typeof binding>(binding) || 0) +
+    (projected ? adjustment.projected : adjustment.actual);
   const format = useFormat();
   const isNegative = saved < 0;
   const sidebarColumnWidth = getColumnWidth({ show3Columns, isSidebar: true });
@@ -197,11 +202,11 @@ function Saved({ projected, onPress, show3Columns }: SavedProps) {
             binding={binding}
             type="financial"
           >
-            {({ type, value }) => (
+            {({ type }) => (
               <View>
                 <PrivacyFilter>
                   <AutoTextSize
-                    key={value}
+                    key={saved}
                     as={Text}
                     minFontSizePx={6}
                     maxFontSizePx={12}
@@ -218,7 +223,7 @@ function Saved({ projected, onPress, show3Columns }: SavedProps) {
                           : theme.formInputText,
                     }}
                   >
-                    {format(value, type)}
+                    {format(saved, type)}
                   </AutoTextSize>
                 </PrivacyFilter>
               </View>
@@ -464,6 +469,7 @@ function BudgetTableHeader({
       >
         {budgetType === 'tracking' ? (
           <Saved
+            month={month}
             projected={month >= monthUtils.currentMonth()}
             onPress={onShowBudgetSummary}
             show3Columns={show3Columns}

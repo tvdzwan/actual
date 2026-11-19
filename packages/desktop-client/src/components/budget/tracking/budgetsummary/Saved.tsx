@@ -11,6 +11,7 @@ import { View } from '@actual-app/components/view';
 import { css } from '@emotion/css';
 
 import { useTrackingSheetValue } from '#components/budget/tracking/TrackingBudgetComponents';
+import { useTrackingSavingsAdjustment } from '#components/budget/useHiddenCategoryTotals';
 import { makeAmountFullStyle } from '#components/budget/util';
 import { FinancialText } from '#components/FinancialText';
 import { PrivacyFilter } from '#components/PrivacyFilter';
@@ -19,13 +20,17 @@ import { trackingBudget } from '#spreadsheet/bindings';
 
 type SavedProps = {
   projected: boolean;
+  month: string;
   style?: CSSProperties;
 };
-export function Saved({ projected, style }: SavedProps) {
+export function Saved({ projected, month, style }: SavedProps) {
   const { t } = useTranslation();
+  const adjustment = useTrackingSavingsAdjustment(month);
   const budgetedSaved =
-    useTrackingSheetValue(trackingBudget.totalBudgetedSaved) || 0;
-  const totalSaved = useTrackingSheetValue(trackingBudget.totalSaved) || 0;
+    (useTrackingSheetValue(trackingBudget.totalBudgetedSaved) || 0) +
+    adjustment.projected;
+  const totalSaved =
+    (useTrackingSheetValue(trackingBudget.totalSaved) || 0) + adjustment.actual;
   const format = useFormat();
   const saved = projected ? budgetedSaved : totalSaved;
   const isNegative = saved < 0;

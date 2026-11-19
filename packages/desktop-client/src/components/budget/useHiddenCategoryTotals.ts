@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 
 import * as monthUtils from '@actual-app/core/shared/months';
-import type { CategoryEntity } from '@actual-app/core/types/models';
+import type {
+  CategoryEntity,
+  CategoryGroupEntity,
+} from '@actual-app/core/types/models';
 
+import { useCategories } from '#hooks/useCategories';
 import { useSpreadsheet } from '#hooks/useSpreadsheet';
 
 export type HiddenCategoryTotals = {
@@ -10,6 +14,41 @@ export type HiddenCategoryTotals = {
   spent: number;
   balance: number;
 };
+
+export function getTrackingSavingsAdjustment(
+  income: HiddenCategoryTotals,
+  expenses: HiddenCategoryTotals,
+) {
+  return {
+    projected: income.budgeted - expenses.budgeted,
+    actual: income.spent + expenses.spent,
+  };
+}
+
+export function getTrackingSavingsCategories(groups: CategoryGroupEntity[]) {
+  return {
+    income: groups
+      .filter(group => group.is_income)
+      .flatMap(group => group.categories ?? [])
+      .filter(category => category.hidden),
+    expenses: groups
+      .filter(group => !group.is_income)
+      .flatMap(group =>
+        (group.categories ?? []).filter(
+          category => group.hidden || category.hidden,
+        ),
+      ),
+  };
+}
+
+export function useTrackingSavingsAdjustment(month: string) {
+  const { data: { grouped = [] } = { grouped: [] } } = useCategories();
+  const categories = getTrackingSavingsCategories(grouped);
+  const income = useHiddenCategoryTotals(month, categories.income, true);
+  const expenses = useHiddenCategoryTotals(month, categories.expenses, true);
+
+  return getTrackingSavingsAdjustment(income, expenses);
+}
 
 export function getHiddenCategoryAdjustment(
   budgetType: string,
@@ -37,11 +76,14 @@ const CATEGORY_TOTAL_FIELDS = [
 export function useHiddenCategoryTotals(
   month: string,
   categories: CategoryEntity[],
+  includeAll = false,
 ) {
   const spreadsheet = useSpreadsheet();
   const sheetName = monthUtils.sheetForMonth(month);
   const hiddenCategoryIdsKey = JSON.stringify(
-    categories.filter(category => category.hidden).map(category => category.id),
+    categories
+      .filter(category => includeAll || category.hidden)
+      .map(category => category.id),
   );
   const [categoryTotals, setCategoryTotals] = useState<
     Record<string, HiddenCategoryTotals>
