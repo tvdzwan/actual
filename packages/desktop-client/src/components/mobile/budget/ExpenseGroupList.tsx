@@ -79,6 +79,7 @@ export function ExpenseGroupList({
         <ExpenseGroupHeader
           categoryGroup={group}
           month={month}
+          showHiddenCategories={showHiddenCategories}
           showBudgetedColumn={showBudgetedColumn}
           show3Columns={show3Columns}
           onEditCategoryGroup={() => {}}

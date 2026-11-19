@@ -16,6 +16,10 @@ import type { CategoryGroupEntity } from '@actual-app/core/types/models';
 import { css } from '@emotion/css';
 import { AutoTextSize } from 'auto-text-size';
 
+import {
+  getHiddenCategoryAdjustment,
+  useHiddenCategoryTotals,
+} from '#components/budget/useHiddenCategoryTotals';
 import { PrivacyFilter } from '#components/PrivacyFilter';
 import { CellValue } from '#components/spreadsheet/CellValue';
 import { useFormat } from '#hooks/useFormat';
@@ -87,6 +91,7 @@ export function IncomeGroup({
         <IncomeGroupHeader
           group={categoryGroup}
           month={month}
+          showHiddenCategories={showHiddenCategories}
           onEdit={onEditCategoryGroup}
           isCollapsed={isCollapsed}
           onToggleCollapse={onToggleCollapse}
@@ -105,6 +110,7 @@ export function IncomeGroup({
 type IncomeGroupHeaderProps = {
   group: CategoryGroupEntity;
   month: string;
+  showHiddenCategories: boolean;
   onEdit: (id: CategoryGroupEntity['id']) => void;
   isCollapsed: (id: CategoryGroupEntity['id']) => boolean;
   onToggleCollapse: (id: CategoryGroupEntity['id']) => void;
@@ -114,6 +120,7 @@ type IncomeGroupHeaderProps = {
 function IncomeGroupHeader({
   group,
   month,
+  showHiddenCategories,
   onEdit,
   isCollapsed,
   onToggleCollapse,
@@ -145,7 +152,11 @@ function IncomeGroupHeader({
         isCollapsed={isCollapsed}
         onToggleCollapse={onToggleCollapse}
       />
-      <IncomeGroupCells group={group} />
+      <IncomeGroupCells
+        group={group}
+        month={month}
+        showHiddenCategories={showHiddenCategories}
+      />
     </View>
   );
 }
@@ -236,11 +247,25 @@ function IncomeGroupName({
 
 type IncomeGroupCellsProps = {
   group: CategoryGroupEntity;
+  month: string;
+  showHiddenCategories: boolean;
 };
 
-function IncomeGroupCells({ group }: IncomeGroupCellsProps) {
+function IncomeGroupCells({
+  group,
+  month,
+  showHiddenCategories,
+}: IncomeGroupCellsProps) {
   const [budgetType = 'envelope'] = useSyncedPref('budgetType');
   const format = useFormat();
+  const hiddenCategoryTotals = useHiddenCategoryTotals(
+    month,
+    group.categories ?? [],
+  );
+  const hiddenCategoryAdjustment = getHiddenCategoryAdjustment(
+    budgetType,
+    showHiddenCategories,
+  );
 
   const budgeted =
     budgetType === 'tracking' ? trackingBudget.groupBudgeted(group.id) : null;
@@ -286,7 +311,11 @@ function IncomeGroupCells({ group }: IncomeGroupCellsProps) {
                     fontWeight: '500',
                   }}
                 >
-                  {format(value, type)}
+                  {format(
+                    value +
+                      hiddenCategoryAdjustment * hiddenCategoryTotals.budgeted,
+                    type,
+                  )}
                 </AutoTextSize>
               </PrivacyFilter>
             </View>
@@ -317,7 +346,10 @@ function IncomeGroupCells({ group }: IncomeGroupCellsProps) {
                   fontWeight: '500',
                 }}
               >
-                {format(value, type)}
+                {format(
+                  value + hiddenCategoryAdjustment * hiddenCategoryTotals.spent,
+                  type,
+                )}
               </AutoTextSize>
             </PrivacyFilter>
           </View>

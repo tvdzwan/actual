@@ -19,6 +19,10 @@ import type {
 import { css } from '@emotion/css';
 import { AutoTextSize } from 'auto-text-size';
 
+import {
+  getHiddenCategoryAdjustment,
+  useHiddenCategoryTotals,
+} from '#components/budget/useHiddenCategoryTotals';
 import { PrivacyFilter } from '#components/PrivacyFilter';
 import { CellValue } from '#components/spreadsheet/CellValue';
 import { useFormat } from '#hooks/useFormat';
@@ -90,6 +94,7 @@ export function ExpenseGroupListItem({
         <ExpenseGroupHeader
           categoryGroup={categoryGroup}
           month={month}
+          showHiddenCategories={showHiddenCategories}
           showBudgetedColumn={showBudgetedColumn}
           show3Columns={show3Columns}
           onEditCategoryGroup={onEditCategoryGroup}
@@ -116,6 +121,7 @@ export function ExpenseGroupListItem({
 type ExpenseGroupHeaderProps = {
   categoryGroup: CategoryGroupEntity;
   month: string;
+  showHiddenCategories: boolean;
   onEditCategoryGroup: (id: CategoryGroupEntity['id']) => void;
   isCollapsed: (id: CategoryGroupEntity['id']) => boolean;
   onToggleCollapse: (id: CategoryGroupEntity['id']) => void;
@@ -127,6 +133,7 @@ type ExpenseGroupHeaderProps = {
 export function ExpenseGroupHeader({
   categoryGroup,
   month,
+  showHiddenCategories,
   onEditCategoryGroup,
   show3Columns,
   showBudgetedColumn,
@@ -162,6 +169,8 @@ export function ExpenseGroupHeader({
       />
       <ExpenseGroupCells
         group={categoryGroup}
+        month={month}
+        showHiddenCategories={showHiddenCategories}
         show3Columns={show3Columns}
         showBudgetedColumn={showBudgetedColumn}
       />
@@ -270,17 +279,29 @@ function ExpenseGroupName({
 
 type ExpenseGroupCellsProps = {
   group: CategoryGroupEntity;
+  month: string;
+  showHiddenCategories: boolean;
   show3Columns: boolean;
   showBudgetedColumn: boolean;
 };
 
 function ExpenseGroupCells({
   group,
+  month,
+  showHiddenCategories,
   show3Columns,
   showBudgetedColumn,
 }: ExpenseGroupCellsProps) {
   const [budgetType = 'envelope'] = useSyncedPref('budgetType');
   const format = useFormat();
+  const hiddenCategoryTotals = useHiddenCategoryTotals(
+    month,
+    group.categories ?? [],
+  );
+  const hiddenCategoryAdjustment = getHiddenCategoryAdjustment(
+    budgetType,
+    showHiddenCategories,
+  );
 
   const columnWidth = getColumnWidth({ show3Columns });
 
@@ -337,7 +358,11 @@ function ExpenseGroupCells({
                   mode="oneline"
                   style={amountStyle}
                 >
-                  {format(value, type)}
+                  {format(
+                    value +
+                      hiddenCategoryAdjustment * hiddenCategoryTotals.budgeted,
+                    type,
+                  )}
                 </AutoTextSize>
               </PrivacyFilter>
             </View>
@@ -364,7 +389,11 @@ function ExpenseGroupCells({
                   mode="oneline"
                   style={amountStyle}
                 >
-                  {format(value, type)}
+                  {format(
+                    value +
+                      hiddenCategoryAdjustment * hiddenCategoryTotals.spent,
+                    type,
+                  )}
                 </AutoTextSize>
               </PrivacyFilter>
             </View>
@@ -386,7 +415,11 @@ function ExpenseGroupCells({
                 mode="oneline"
                 style={amountStyle}
               >
-                {format(value, type)}
+                {format(
+                  value +
+                    hiddenCategoryAdjustment * hiddenCategoryTotals.balance,
+                  type,
+                )}
               </AutoTextSize>
             </PrivacyFilter>
           </View>

@@ -17,6 +17,10 @@ import * as monthUtils from '@actual-app/core/shared/months';
 import { css } from '@emotion/css';
 
 import { BalanceWithCarryover } from '#components/budget/BalanceWithCarryover';
+import {
+  getHiddenCategoryAdjustment,
+  useHiddenCategoryTotals,
+} from '#components/budget/useHiddenCategoryTotals';
 import { makeAmountGrey } from '#components/budget/util';
 import { NotesButton } from '#components/NotesButton';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
@@ -24,6 +28,7 @@ import { Field, Row, SheetCell } from '#components/table';
 import type { SheetCellProps } from '#components/table';
 import { useCategoryScheduleGoalTemplateIndicator } from '#hooks/useCategoryScheduleGoalTemplateIndicator';
 import { useFormat } from '#hooks/useFormat';
+import { useLocalPref } from '#hooks/useLocalPref';
 import { useNavigate } from '#hooks/useNavigate';
 import { useSheetName } from '#hooks/useSheetName';
 import { useSheetValue } from '#hooks/useSheetValue';
@@ -143,6 +148,15 @@ export const ExpenseGroupMonth = memo(function ExpenseGroupMonth({
   group,
 }: CategoryGroupMonthProps) {
   const { id } = group;
+  const [showHiddenCategories] = useLocalPref('budget.showHiddenCategories');
+  const hiddenCategoryTotals = useHiddenCategoryTotals(
+    month,
+    group.categories ?? [],
+  );
+  const hiddenCategoryAdjustment = getHiddenCategoryAdjustment(
+    'envelope',
+    showHiddenCategories,
+  );
 
   return (
     <View
@@ -154,40 +168,63 @@ export const ExpenseGroupMonth = memo(function ExpenseGroupMonth({
           : theme.budgetHeaderOtherMonth,
       }}
     >
-      <EnvelopeSheetCell
-        name="budgeted"
-        width="flex"
-        textAlign="right"
-        style={{ fontWeight: 600, ...styles.tnum }}
-        valueProps={{
-          binding: envelopeBudget.groupBudgeted(id),
-          type: 'financial',
-        }}
-      />
-      <EnvelopeSheetCell
-        name="spent"
-        width="flex"
-        textAlign="right"
-        style={{ fontWeight: 600, ...styles.tnum }}
-        valueProps={{
-          binding: envelopeBudget.groupSumAmount(id),
-          type: 'financial',
-        }}
-      />
-      <EnvelopeSheetCell
-        name="balance"
-        width="flex"
-        textAlign="right"
-        style={{
-          fontWeight: 600,
-          paddingRight: styles.monthRightPadding,
-          ...styles.tnum,
-        }}
-        valueProps={{
-          binding: envelopeBudget.groupBalance(id),
-          type: 'financial',
-        }}
-      />
+      <EnvelopeCellValue
+        binding={envelopeBudget.groupBudgeted(id)}
+        type="financial"
+      >
+        {props => (
+          <View style={{ flex: 1, textAlign: 'right' }}>
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.budgeted
+              }
+              style={{ fontWeight: 600, ...styles.tnum }}
+            />
+          </View>
+        )}
+      </EnvelopeCellValue>
+      <EnvelopeCellValue
+        binding={envelopeBudget.groupSumAmount(id)}
+        type="financial"
+      >
+        {props => (
+          <View style={{ flex: 1, textAlign: 'right' }}>
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.spent
+              }
+              style={{ fontWeight: 600, ...styles.tnum }}
+            />
+          </View>
+        )}
+      </EnvelopeCellValue>
+      <EnvelopeCellValue
+        binding={envelopeBudget.groupBalance(id)}
+        type="financial"
+      >
+        {props => (
+          <View
+            style={{
+              flex: 1,
+              textAlign: 'right',
+              paddingRight: styles.monthRightPadding,
+            }}
+          >
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.balance
+              }
+              style={{ fontWeight: 600, ...styles.tnum }}
+            />
+          </View>
+        )}
+      </EnvelopeCellValue>
     </View>
   );
 });

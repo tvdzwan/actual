@@ -20,6 +20,10 @@ import { t } from 'i18next';
 
 import { BalanceWithCarryover } from '#components/budget/BalanceWithCarryover';
 import { GoalStatus } from '#components/budget/GoalStatus';
+import {
+  getHiddenCategoryAdjustment,
+  useHiddenCategoryTotals,
+} from '#components/budget/useHiddenCategoryTotals';
 import { makeAmountGrey } from '#components/budget/util';
 import { NotesButton } from '#components/NotesButton';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
@@ -27,6 +31,7 @@ import { Field, SheetCell } from '#components/table';
 import type { SheetCellProps } from '#components/table';
 import { useCategoryScheduleGoalTemplateIndicator } from '#hooks/useCategoryScheduleGoalTemplateIndicator';
 import { useFormat } from '#hooks/useFormat';
+import { useLocalPref } from '#hooks/useLocalPref';
 import { useNavigate } from '#hooks/useNavigate';
 import { useSheetValue } from '#hooks/useSheetValue';
 import { useUndo } from '#hooks/useUndo';
@@ -141,6 +146,15 @@ export const GroupMonth = memo(function GroupMonth({
   group,
 }: CategoryGroupMonthProps) {
   const { id } = group;
+  const [showHiddenCategories] = useLocalPref('budget.showHiddenCategories');
+  const hiddenCategoryTotals = useHiddenCategoryTotals(
+    month,
+    group.categories ?? [],
+  );
+  const hiddenCategoryAdjustment = getHiddenCategoryAdjustment(
+    'tracking',
+    showHiddenCategories,
+  );
 
   return (
     <View
@@ -152,41 +166,64 @@ export const GroupMonth = memo(function GroupMonth({
           : theme.budgetHeaderOtherMonth,
       }}
     >
-      <TrackingSheetCell
-        name="budgeted"
-        width="flex"
-        textAlign="right"
-        style={{ fontWeight: 600, ...styles.tnum }}
-        valueProps={{
-          binding: trackingBudget.groupBudgeted(id),
-          type: 'financial',
-        }}
-      />
-      <TrackingSheetCell
-        name="spent"
-        width="flex"
-        textAlign="right"
-        style={{ fontWeight: 600, ...styles.tnum }}
-        valueProps={{
-          binding: trackingBudget.groupSumAmount(id),
-          type: 'financial',
-        }}
-      />
+      <TrackingCellValue
+        binding={trackingBudget.groupBudgeted(id)}
+        type="financial"
+      >
+        {props => (
+          <View style={{ flex: 1, textAlign: 'right' }}>
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.budgeted
+              }
+              style={{ fontWeight: 600, ...styles.tnum }}
+            />
+          </View>
+        )}
+      </TrackingCellValue>
+      <TrackingCellValue
+        binding={trackingBudget.groupSumAmount(id)}
+        type="financial"
+      >
+        {props => (
+          <View style={{ flex: 1, textAlign: 'right' }}>
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.spent
+              }
+              style={{ fontWeight: 600, ...styles.tnum }}
+            />
+          </View>
+        )}
+      </TrackingCellValue>
       {!group.is_income && (
-        <TrackingSheetCell
-          name="balance"
-          width="flex"
-          textAlign="right"
-          style={{
-            fontWeight: 600,
-            paddingRight: styles.monthRightPadding,
-            ...styles.tnum,
-          }}
-          valueProps={{
-            binding: trackingBudget.groupBalance(id),
-            type: 'financial',
-          }}
-        />
+        <TrackingCellValue
+          binding={trackingBudget.groupBalance(id)}
+          type="financial"
+        >
+          {props => (
+            <View
+              style={{
+                flex: 1,
+                textAlign: 'right',
+                paddingRight: styles.monthRightPadding,
+              }}
+            >
+              <CellValueText
+                {...props}
+                value={
+                  props.value +
+                  hiddenCategoryAdjustment * hiddenCategoryTotals.balance
+                }
+                style={{ fontWeight: 600, ...styles.tnum }}
+              />
+            </View>
+          )}
+        </TrackingCellValue>
       )}
     </View>
   );
