@@ -14,7 +14,6 @@ import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
-import * as monthUtils from '@actual-app/core/shared/months';
 import { css } from '@emotion/css';
 import { t } from 'i18next';
 
@@ -42,6 +41,7 @@ import type { CategoryGroupMonthProps, CategoryMonthProps } from '..';
 
 import { BalanceMenu } from './BalanceMenu';
 import { BudgetMenu } from './BudgetMenu';
+import { useTrackingBudget } from './TrackingBudgetContext';
 
 export const useTrackingSheetValue = <
   FieldName extends SheetFields<'tracking-budget'>,
@@ -186,6 +186,7 @@ export const GroupMonth = memo(function GroupMonth({
   month,
   group,
 }: CategoryGroupMonthProps) {
+  const { currentMonth } = useTrackingBudget();
   const { id } = group;
   const [showHiddenCategories] = useLocalPref('budget.showHiddenCategories');
   const hiddenCategoryTotals = useHiddenCategoryTotals(
@@ -202,9 +203,10 @@ export const GroupMonth = memo(function GroupMonth({
       style={{
         flex: 1,
         flexDirection: 'row',
-        backgroundColor: monthUtils.isCurrentMonth(month)
-          ? theme.budgetHeaderCurrentMonth
-          : theme.budgetHeaderOtherMonth,
+        backgroundColor:
+          month === currentMonth
+            ? theme.budgetHeaderCurrentMonth
+            : theme.budgetHeaderOtherMonth,
       }}
     >
       <TrackingCellValue
@@ -283,6 +285,7 @@ export const CategoryMonth = memo(function CategoryMonth({
   onBudgetAction,
   onShowActivity,
 }: CategoryMonthProps) {
+  const { currentMonth } = useTrackingBudget();
   const [menuOpen, setMenuOpen] = useState(false);
   const triggerRef = useRef(null);
   const format = useFormat();
@@ -313,9 +316,10 @@ export const CategoryMonth = memo(function CategoryMonth({
       style={{
         flex: 1,
         flexDirection: 'row',
-        backgroundColor: monthUtils.isCurrentMonth(month)
-          ? theme.budgetCurrentMonth
-          : theme.budgetOtherMonth,
+        backgroundColor:
+          month === currentMonth
+            ? theme.budgetCurrentMonth
+            : theme.budgetOtherMonth,
         '& .hover-visible': {
           opacity: 0,
           transition: 'opacity .25s',

@@ -52,7 +52,7 @@ export function Budget() {
   const [startMonthPref, setStartMonthPref] = useLocalPref('budget.startMonth');
   const budgetCurrentMonth =
     salaryDayEnabled && Number.isFinite(Number(salaryDay))
-      ? monthUtils.salaryMonth(currentMonth, Number(salaryDay))
+      ? monthUtils.salaryMonth(currentDate, Number(salaryDay))
       : currentMonth;
   const startMonth = startMonthPref || budgetCurrentMonth;
   const { data: loadedBounds } = useQuery(budgetBoundsQueries.bounds());
@@ -190,6 +190,7 @@ export function Budget() {
     table = (
       <TrackingBudgetProvider
         summaryCollapsed={summaryCollapsed}
+        currentMonth={budgetCurrentMonth}
         onBudgetAction={onBudgetAction}
         onToggleSummaryCollapse={onToggleCollapse}
       >
@@ -219,6 +220,7 @@ export function Budget() {
     table = (
       <EnvelopeBudgetProvider
         summaryCollapsed={summaryCollapsed}
+        currentMonth={budgetCurrentMonth}
         onBudgetAction={onBudgetAction}
         onToggleSummaryCollapse={onToggleCollapse}
       >

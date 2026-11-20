@@ -1,8 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 
-import * as monthUtils from '@actual-app/core/shared/months';
-
 type TrackingBudgetContextDefinition = {
   summaryCollapsed: boolean;
   onBudgetAction: (month: string, action: string, arg?: unknown) => void;
@@ -23,20 +21,16 @@ const TrackingBudgetContext = createContext<TrackingBudgetContextDefinition>({
   currentMonth: 'unknown',
 });
 
-type TrackingBudgetProviderProps = Omit<
-  TrackingBudgetContextDefinition,
-  'currentMonth'
-> & {
+type TrackingBudgetProviderProps = TrackingBudgetContextDefinition & {
   children: ReactNode;
 };
 export function TrackingBudgetProvider({
   summaryCollapsed,
+  currentMonth,
   onBudgetAction,
   onToggleSummaryCollapse,
   children,
 }: TrackingBudgetProviderProps) {
-  const currentMonth = monthUtils.currentMonth();
-
   return (
     <TrackingBudgetContext.Provider
       value={{

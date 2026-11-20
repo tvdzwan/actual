@@ -1,8 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 
-import * as monthUtils from '@actual-app/core/shared/months';
-
 type EnvelopeBudgetContextDefinition = {
   summaryCollapsed: boolean;
   onBudgetAction: (month: string, action: string, arg?: unknown) => void;
@@ -23,20 +21,16 @@ const EnvelopeBudgetContext = createContext<EnvelopeBudgetContextDefinition>({
   currentMonth: 'unknown',
 });
 
-type EnvelopeBudgetProviderProps = Omit<
-  EnvelopeBudgetContextDefinition,
-  'currentMonth'
-> & {
+type EnvelopeBudgetProviderProps = EnvelopeBudgetContextDefinition & {
   children: ReactNode;
 };
 export function EnvelopeBudgetProvider({
   summaryCollapsed,
+  currentMonth,
   onBudgetAction,
   onToggleSummaryCollapse,
   children,
 }: EnvelopeBudgetProviderProps) {
-  const currentMonth = monthUtils.currentMonth();
-
   return (
     <EnvelopeBudgetContext.Provider
       value={{

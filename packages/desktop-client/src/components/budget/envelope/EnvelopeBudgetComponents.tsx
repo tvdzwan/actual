@@ -13,7 +13,6 @@ import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
-import * as monthUtils from '@actual-app/core/shared/months';
 import { css } from '@emotion/css';
 
 import { BalanceWithCarryover } from '#components/budget/BalanceWithCarryover';
@@ -40,6 +39,7 @@ import type { CategoryGroupMonthProps, CategoryMonthProps } from '..';
 
 import { BalanceMovementMenu } from './BalanceMovementMenu';
 import { BudgetMenu } from './BudgetMenu';
+import { useEnvelopeBudget } from './EnvelopeBudgetContext';
 import { IncomeMenu } from './IncomeMenu';
 
 export function useEnvelopeSheetName<
@@ -186,6 +186,7 @@ export const ExpenseGroupMonth = memo(function ExpenseGroupMonth({
   month,
   group,
 }: CategoryGroupMonthProps) {
+  const { currentMonth } = useEnvelopeBudget();
   const { id } = group;
   const [showHiddenCategories = false] = useLocalPref(
     'budget.showHiddenCategories',
@@ -204,9 +205,10 @@ export const ExpenseGroupMonth = memo(function ExpenseGroupMonth({
       style={{
         flex: 1,
         flexDirection: 'row',
-        backgroundColor: monthUtils.isCurrentMonth(month)
-          ? theme.budgetHeaderCurrentMonth
-          : theme.budgetHeaderOtherMonth,
+        backgroundColor:
+          month === currentMonth
+            ? theme.budgetHeaderCurrentMonth
+            : theme.budgetHeaderOtherMonth,
       }}
     >
       <EnvelopeCellValue
@@ -283,6 +285,7 @@ export const ExpenseCategoryMonth = memo(function ExpenseCategoryMonth({
   onBudgetAction,
   onShowActivity,
 }: CategoryMonthProps) {
+  const { currentMonth } = useEnvelopeBudget();
   const { t } = useTranslation();
   const format = useFormat();
 
@@ -346,9 +349,10 @@ export const ExpenseCategoryMonth = memo(function ExpenseCategoryMonth({
       style={{
         flex: 1,
         flexDirection: 'row',
-        backgroundColor: monthUtils.isCurrentMonth(month)
-          ? theme.budgetCurrentMonth
-          : theme.budgetOtherMonth,
+        backgroundColor:
+          month === currentMonth
+            ? theme.budgetCurrentMonth
+            : theme.budgetOtherMonth,
         '& .hover-visible': {
           opacity: 0,
           transition: 'opacity .25s',
@@ -634,6 +638,7 @@ export const ExpenseCategoryMonth = memo(function ExpenseCategoryMonth({
 });
 
 export function IncomeGroupMonth({ month, group }: CategoryGroupMonthProps) {
+  const { currentMonth } = useEnvelopeBudget();
   const [showHiddenCategories = false] = useLocalPref(
     'budget.showHiddenCategories',
   );
@@ -661,9 +666,10 @@ export function IncomeGroupMonth({ month, group }: CategoryGroupMonthProps) {
               paddingRight: styles.monthRightPadding,
               fontWeight: 600,
               ...styles.tnum,
-              backgroundColor: monthUtils.isCurrentMonth(month)
-                ? theme.budgetHeaderCurrentMonth
-                : theme.budgetHeaderOtherMonth,
+              backgroundColor:
+                month === currentMonth
+                  ? theme.budgetHeaderCurrentMonth
+                  : theme.budgetHeaderOtherMonth,
             }}
           >
             <CellValueText
@@ -687,6 +693,7 @@ export function IncomeCategoryMonth({
   onShowActivity,
   onBudgetAction,
 }: CategoryMonthProps) {
+  const { currentMonth } = useEnvelopeBudget();
   const incomeMenuTriggerRef = useRef(null);
   const [incomeMenuOpen, setIncomeMenuOpen] = useState(false);
   const [incomePosition, setIncomePosition] = useState({
@@ -716,9 +723,10 @@ export function IncomeCategoryMonth({
         style={{
           textAlign: 'right',
           ...(isLast && { borderBottomWidth: 0 }),
-          backgroundColor: monthUtils.isCurrentMonth(month)
-            ? theme.budgetCurrentMonth
-            : theme.budgetOtherMonth,
+          backgroundColor:
+            month === currentMonth
+              ? theme.budgetCurrentMonth
+              : theme.budgetOtherMonth,
         }}
       >
         <View
