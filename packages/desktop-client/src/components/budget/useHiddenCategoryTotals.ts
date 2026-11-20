@@ -31,14 +31,23 @@ export function getTrackingSavingsCategories(groups: CategoryGroupEntity[]) {
       .filter(group => group.is_income)
       .flatMap(group => group.categories ?? [])
       .filter(category => category.hidden),
-    expenses: groups
-      .filter(group => !group.is_income)
-      .flatMap(group =>
-        (group.categories ?? []).filter(
-          category => group.hidden || category.hidden,
-        ),
-      ),
+    expenses: getHiddenExpenseCategories(groups),
   };
+}
+
+export function getHiddenExpenseCategories(groups: CategoryGroupEntity[]) {
+  return groups
+    .filter(group => !group.is_income)
+    .flatMap(group =>
+      (group.categories ?? []).filter(
+        category => group.hidden || category.hidden,
+      ),
+    );
+}
+
+export function useHiddenExpenseCategories() {
+  const { data: { grouped = [] } = { grouped: [] } } = useCategories();
+  return getHiddenExpenseCategories(grouped);
 }
 
 export function useTrackingSavingsAdjustment(month: string) {
@@ -48,6 +57,11 @@ export function useTrackingSavingsAdjustment(month: string) {
   const expenses = useHiddenCategoryTotals(month, categories.expenses, true);
 
   return getTrackingSavingsAdjustment(income, expenses);
+}
+
+export function useHiddenExpenseTotals(month: string) {
+  const categories = useHiddenExpenseCategories();
+  return useHiddenCategoryTotals(month, categories, true);
 }
 
 export function getHiddenCategoryAdjustment(

@@ -6,9 +6,11 @@ import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 
-import { useHiddenCategoryTotals } from '#components/budget/useHiddenCategoryTotals';
+import {
+  useHiddenCategoryTotals,
+  useHiddenExpenseCategories,
+} from '#components/budget/useHiddenCategoryTotals';
 import { PrivacyFilter } from '#components/PrivacyFilter';
-import { useCategories } from '#hooks/useCategories';
 import { useFormat } from '#hooks/useFormat';
 
 import { fraction } from './fraction';
@@ -21,13 +23,12 @@ type HiddenExpenseTotalProps = {
 export function HiddenExpenseTotal({ month }: HiddenExpenseTotalProps) {
   const { t } = useTranslation();
   const format = useFormat();
-  const { data: { grouped: categoryGroups = [] } = { grouped: [] } } =
-    useCategories();
-  const hiddenExpenseCategories = categoryGroups
-    .filter(group => !group.is_income)
-    .flatMap(group => group.categories ?? [])
-    .filter(category => category.hidden);
-  const hiddenTotals = useHiddenCategoryTotals(month, hiddenExpenseCategories);
+  const hiddenExpenseCategories = useHiddenExpenseCategories();
+  const hiddenTotals = useHiddenCategoryTotals(
+    month,
+    hiddenExpenseCategories,
+    true,
+  );
 
   if (hiddenExpenseCategories.length === 0) {
     return null;

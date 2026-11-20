@@ -20,6 +20,7 @@ import { BalanceWithCarryover } from '#components/budget/BalanceWithCarryover';
 import {
   getHiddenCategoryAdjustment,
   useHiddenCategoryTotals,
+  useHiddenExpenseTotals,
 } from '#components/budget/useHiddenCategoryTotals';
 import { makeAmountGrey } from '#components/budget/util';
 import { NotesButton } from '#components/NotesButton';
@@ -78,7 +79,20 @@ const cellStyle: CSSProperties = {
   fontWeight: 600,
 };
 
-export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
+export const BudgetTotalsMonth = memo(function BudgetTotalsMonth({
+  month,
+}: {
+  month: string;
+}) {
+  const [showHiddenCategories = false] = useLocalPref(
+    'budget.showHiddenCategories',
+  );
+  const hiddenCategoryTotals = useHiddenExpenseTotals(month);
+  const hiddenCategoryAdjustment = getHiddenCategoryAdjustment(
+    'envelope',
+    showHiddenCategories,
+  );
+
   return (
     <View
       style={{
@@ -99,7 +113,14 @@ export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
           type="financial"
         >
           {props => (
-            <CellValueText {...props} value={-props.value} style={cellStyle} />
+            <CellValueText
+              {...props}
+              value={
+                -props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.budgeted
+              }
+              style={cellStyle}
+            />
           )}
         </EnvelopeCellValue>
       </View>
@@ -108,7 +129,16 @@ export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
           <Trans>Spent</Trans>
         </Text>
         <EnvelopeCellValue binding={envelopeBudget.totalSpent} type="financial">
-          {props => <CellValueText {...props} style={cellStyle} />}
+          {props => (
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.spent
+              }
+              style={cellStyle}
+            />
+          )}
         </EnvelopeCellValue>
       </View>
       <View style={headerLabelStyle}>
@@ -119,7 +149,16 @@ export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
           binding={envelopeBudget.totalBalance}
           type="financial"
         >
-          {props => <CellValueText {...props} style={cellStyle} />}
+          {props => (
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.balance
+              }
+              style={cellStyle}
+            />
+          )}
         </EnvelopeCellValue>
       </View>
     </View>
@@ -175,7 +214,9 @@ export const ExpenseGroupMonth = memo(function ExpenseGroupMonth({
         type="financial"
       >
         {props => (
-          <View style={{ flex: 1, textAlign: 'right' }}>
+          <View
+            style={{ flex: 1, textAlign: 'right', justifyContent: 'center' }}
+          >
             <CellValueText
               {...props}
               value={
@@ -192,7 +233,9 @@ export const ExpenseGroupMonth = memo(function ExpenseGroupMonth({
         type="financial"
       >
         {props => (
-          <View style={{ flex: 1, textAlign: 'right' }}>
+          <View
+            style={{ flex: 1, textAlign: 'right', justifyContent: 'center' }}
+          >
             <CellValueText
               {...props}
               value={
@@ -213,6 +256,7 @@ export const ExpenseGroupMonth = memo(function ExpenseGroupMonth({
             style={{
               flex: 1,
               textAlign: 'right',
+              justifyContent: 'center',
               paddingRight: styles.monthRightPadding,
             }}
           >
@@ -589,29 +633,49 @@ export const ExpenseCategoryMonth = memo(function ExpenseCategoryMonth({
   );
 });
 
-type IncomeGroupMonthProps = {
-  month: string;
-};
-export function IncomeGroupMonth({ month }: IncomeGroupMonthProps) {
+export function IncomeGroupMonth({ month, group }: CategoryGroupMonthProps) {
+  const [showHiddenCategories = false] = useLocalPref(
+    'budget.showHiddenCategories',
+  );
+  const hiddenCategoryTotals = useHiddenCategoryTotals(
+    month,
+    group.categories ?? [],
+  );
+  const hiddenCategoryAdjustment = getHiddenCategoryAdjustment(
+    'envelope',
+    showHiddenCategories,
+  );
+
   return (
     <View style={{ flex: 1 }}>
-      <EnvelopeSheetCell
-        name="received"
-        width="flex"
-        textAlign="right"
-        style={{
-          fontWeight: 600,
-          paddingRight: styles.monthRightPadding,
-          ...styles.tnum,
-          backgroundColor: monthUtils.isCurrentMonth(month)
-            ? theme.budgetHeaderCurrentMonth
-            : theme.budgetHeaderOtherMonth,
-        }}
-        valueProps={{
-          binding: envelopeBudget.groupIncomeReceived,
-          type: 'financial',
-        }}
-      />
+      <EnvelopeCellValue
+        binding={envelopeBudget.groupIncomeReceived}
+        type="financial"
+      >
+        {props => (
+          <View
+            style={{
+              flex: 1,
+              textAlign: 'right',
+              justifyContent: 'center',
+              paddingRight: styles.monthRightPadding,
+              fontWeight: 600,
+              ...styles.tnum,
+              backgroundColor: monthUtils.isCurrentMonth(month)
+                ? theme.budgetHeaderCurrentMonth
+                : theme.budgetHeaderOtherMonth,
+            }}
+          >
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.spent
+              }
+            />
+          </View>
+        )}
+      </EnvelopeCellValue>
     </View>
   );
 }

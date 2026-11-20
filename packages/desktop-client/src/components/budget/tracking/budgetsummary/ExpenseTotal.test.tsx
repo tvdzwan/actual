@@ -43,12 +43,8 @@ vi.mock('#hooks/useFormat', () => ({
 vi.mock('#components/PrivacyFilter', () => ({
   PrivacyFilter: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock('#hooks/useCategories', () => ({
-  useCategories: () => ({
-    data: { grouped: [{ categories: [{ id: 'hidden', hidden: true }] }] },
-  }),
-}));
 vi.mock('#components/budget/useHiddenCategoryTotals', () => ({
+  useHiddenExpenseCategories: () => [{ id: 'hidden', hidden: true }],
   useHiddenCategoryTotals: () => ({
     spent: testAmounts.hiddenSpent,
     budgeted: 200,

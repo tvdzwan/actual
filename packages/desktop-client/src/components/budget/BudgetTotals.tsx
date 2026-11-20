@@ -180,7 +180,7 @@ export const BudgetTotals = memo(function BudgetTotals({
         </Popover>
       </View>
       <RenderMonths>
-        <MonthComponent />
+        {({ month }) => <MonthComponent month={month} />}
       </RenderMonths>
     </View>
   );

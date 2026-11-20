@@ -80,7 +80,6 @@ export function ExpenseCategory({
       collapsed
       style={{
         backgroundColor: theme.budgetCurrentMonth,
-        opacity: cat.hidden || categoryGroup?.hidden ? 0.5 : undefined,
       }}
     >
       <DropHighlight pos={dropPos} offset={{ top: 1 }} />
@@ -102,22 +101,32 @@ export function ExpenseCategory({
           onDelete={onDelete}
         />
 
-        <RenderMonths>
-          {({ month }) => (
-            <MonthComponent
-              month={month}
-              editing={
-                editingCell &&
-                editingCell.id === cat.id &&
-                editingCell.cell === month
-              }
-              category={cat}
-              onEdit={onEditMonth}
-              onBudgetAction={onBudgetAction}
-              onShowActivity={onShowActivity}
-            />
-          )}
-        </RenderMonths>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            ...(cat.hidden || categoryGroup?.hidden
+              ? { '& [data-cellname]': { opacity: 0.5 } }
+              : {}),
+          }}
+        >
+          <RenderMonths>
+            {({ month }) => (
+              <MonthComponent
+                month={month}
+                editing={
+                  editingCell &&
+                  editingCell.id === cat.id &&
+                  editingCell.cell === month
+                }
+                category={cat}
+                onEdit={onEditMonth}
+                onBudgetAction={onBudgetAction}
+                onShowActivity={onShowActivity}
+              />
+            )}
+          </RenderMonths>
+        </View>
       </View>
     </Row>
   );

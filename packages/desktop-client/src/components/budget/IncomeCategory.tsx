@@ -2,6 +2,7 @@
 import React from 'react';
 import type { ComponentProps } from 'react';
 
+import { View } from '@actual-app/components/view';
 import type { CategoryEntity } from '@actual-app/core/types/models';
 
 import { DropHighlight, useDraggable, useDroppable } from '#components/sort';
@@ -61,9 +62,6 @@ export function IncomeCategory({
     <Row
       innerRef={dropRef}
       collapsed
-      style={{
-        opacity: cat.hidden ? 0.5 : undefined,
-      }}
     >
       <DropHighlight pos={dropPos} offset={{ top: 1 }} />
 
@@ -80,23 +78,31 @@ export function IncomeCategory({
         onSave={onSave}
         onDelete={onDelete}
       />
-      <RenderMonths>
-        {({ month }) => (
-          <MonthComponent
-            month={month}
-            editing={
-              editingCell &&
-              editingCell.id === cat.id &&
-              editingCell.cell === month
-            }
-            category={cat}
-            isLast={isLast}
-            onEdit={onEditMonth}
-            onBudgetAction={onBudgetAction}
-            onShowActivity={onShowActivity}
-          />
-        )}
-      </RenderMonths>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          ...(cat.hidden ? { '& [data-cellname]': { opacity: 0.5 } } : {}),
+        }}
+      >
+        <RenderMonths>
+          {({ month }) => (
+            <MonthComponent
+              month={month}
+              editing={
+                editingCell &&
+                editingCell.id === cat.id &&
+                editingCell.cell === month
+              }
+              category={cat}
+              isLast={isLast}
+              onEdit={onEditMonth}
+              onBudgetAction={onBudgetAction}
+              onShowActivity={onShowActivity}
+            />
+          )}
+        </RenderMonths>
+      </View>
     </Row>
   );
 }

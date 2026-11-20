@@ -23,6 +23,7 @@ import { GoalStatus } from '#components/budget/GoalStatus';
 import {
   getHiddenCategoryAdjustment,
   useHiddenCategoryTotals,
+  useHiddenExpenseTotals,
 } from '#components/budget/useHiddenCategoryTotals';
 import { makeAmountGrey } from '#components/budget/util';
 import { NotesButton } from '#components/NotesButton';
@@ -73,7 +74,20 @@ const cellStyle: CSSProperties = {
   fontWeight: 600,
 };
 
-export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
+export const BudgetTotalsMonth = memo(function BudgetTotalsMonth({
+  month,
+}: {
+  month: string;
+}) {
+  const [showHiddenCategories = false] = useLocalPref(
+    'budget.showHiddenCategories',
+  );
+  const hiddenCategoryTotals = useHiddenExpenseTotals(month);
+  const hiddenCategoryAdjustment = getHiddenCategoryAdjustment(
+    'tracking',
+    showHiddenCategories,
+  );
+
   return (
     <View
       style={{
@@ -92,7 +106,16 @@ export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
           binding={trackingBudget.totalBudgetedExpense}
           type="financial"
         >
-          {props => <CellValueText {...props} style={cellStyle} />}
+          {props => (
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.budgeted
+              }
+              style={cellStyle}
+            />
+          )}
         </TrackingCellValue>
       </View>
       <View style={headerLabelStyle}>
@@ -100,7 +123,16 @@ export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
           <Trans>Spent</Trans>
         </Text>
         <TrackingCellValue binding={trackingBudget.totalSpent} type="financial">
-          {props => <CellValueText {...props} style={cellStyle} />}
+          {props => (
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.spent
+              }
+              style={cellStyle}
+            />
+          )}
         </TrackingCellValue>
       </View>
       <View style={headerLabelStyle}>
@@ -111,7 +143,16 @@ export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
           binding={trackingBudget.totalLeftover}
           type="financial"
         >
-          {props => <CellValueText {...props} style={cellStyle} />}
+          {props => (
+            <CellValueText
+              {...props}
+              value={
+                props.value +
+                hiddenCategoryAdjustment * hiddenCategoryTotals.balance
+              }
+              style={cellStyle}
+            />
+          )}
         </TrackingCellValue>
       </View>
     </View>
@@ -171,7 +212,9 @@ export const GroupMonth = memo(function GroupMonth({
         type="financial"
       >
         {props => (
-          <View style={{ flex: 1, textAlign: 'right' }}>
+          <View
+            style={{ flex: 1, textAlign: 'right', justifyContent: 'center' }}
+          >
             <CellValueText
               {...props}
               value={
@@ -188,7 +231,9 @@ export const GroupMonth = memo(function GroupMonth({
         type="financial"
       >
         {props => (
-          <View style={{ flex: 1, textAlign: 'right' }}>
+          <View
+            style={{ flex: 1, textAlign: 'right', justifyContent: 'center' }}
+          >
             <CellValueText
               {...props}
               value={
@@ -210,6 +255,7 @@ export const GroupMonth = memo(function GroupMonth({
               style={{
                 flex: 1,
                 textAlign: 'right',
+                justifyContent: 'center',
                 paddingRight: styles.monthRightPadding,
               }}
             >

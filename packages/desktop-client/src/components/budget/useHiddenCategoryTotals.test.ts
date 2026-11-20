@@ -5,6 +5,7 @@ import {
   getHiddenCategoryAdjustment,
   getTrackingSavingsAdjustment,
   getTrackingSavingsCategories,
+  useHiddenExpenseTotals,
   useTrackingSavingsAdjustment,
 } from './useHiddenCategoryTotals';
 
@@ -60,6 +61,58 @@ describe('useTrackingSavingsAdjustment', () => {
     rerender();
     expect(result.current).toEqual({ projected: 0, actual: 0 });
     expect(testState.callbacks.size).toBe(0);
+    unmount();
+  });
+});
+
+describe('useHiddenExpenseTotals', () => {
+  it('includes hidden categories and categories in hidden expense groups', () => {
+    const hiddenCategory = {
+      id: 'hidden',
+      name: 'Hidden',
+      group: 'expenses',
+      hidden: true,
+    };
+    const hiddenGroupCategory = {
+      id: 'hidden-group-category',
+      name: 'Hidden group category',
+      group: 'hidden-group',
+    };
+    testState.groups = [
+      {
+        id: 'expenses',
+        name: 'Expenses',
+        categories: [hiddenCategory],
+      },
+      {
+        id: 'hidden-group',
+        name: 'Hidden group',
+        hidden: true,
+        categories: [hiddenGroupCategory],
+      },
+    ];
+    const { result, unmount } = renderHook(() =>
+      useHiddenExpenseTotals('2026-10'),
+    );
+
+    act(() => {
+      for (const [categoryId, budgeted, spent, balance] of [
+        ['hidden', 10, -4, 6],
+        ['hidden-group-category', 20, -8, 12],
+      ] as const) {
+        testState.callbacks
+          .get(`budget202610!budget-${categoryId}`)
+          ?.({ value: budgeted });
+        testState.callbacks
+          .get(`budget202610!sum-amount-${categoryId}`)
+          ?.({ value: spent });
+        testState.callbacks
+          .get(`budget202610!leftover-${categoryId}`)
+          ?.({ value: balance });
+      }
+    });
+
+    expect(result.current).toEqual({ budgeted: 30, spent: -12, balance: 18 });
     unmount();
   });
 });

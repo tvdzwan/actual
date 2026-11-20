@@ -92,7 +92,7 @@ export function SidebarCategory({
         alignItems: 'center',
         userSelect: 'none',
         WebkitUserSelect: 'none',
-        opacity: category.hidden || categoryGroup?.hidden ? 0.33 : undefined,
+        opacity: category.hidden || categoryGroup?.hidden ? 0.5 : undefined,
         backgroundColor: 'transparent',
         height: 20,
       }}
