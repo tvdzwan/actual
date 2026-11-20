@@ -14,10 +14,11 @@ export function ExpenseTotal({ style }: ExpenseTotalProps) {
   const { t } = useTranslation();
   return (
     <BudgetTotal
-      title={t('Expenses')}
+      title={t('Variable Expenses')}
       current={trackingBudget.totalSpent}
       target={trackingBudget.totalBudgetedExpense}
       ProgressComponent={ExpenseProgress}
+      invertCurrent
       style={style}
     />
   );

@@ -59,11 +59,11 @@ export function HiddenExpenseTotal({ month }: HiddenExpenseTotalProps) {
       />
       <View style={{ marginLeft: 10, ...styles.tnum }}>
         <Text style={{ color: theme.pageTextLight }}>
-          {t('Hidden Expenses')}
+          {t('Fixed Expenses')}
         </Text>
         <Text>
           <PrivacyFilter>
-            {format(hiddenTotals.spent, 'financial')}
+            {format(-hiddenTotals.spent || 0, 'financial')}
           </PrivacyFilter>
           <Text style={{ color: theme.pageTextLight, fontStyle: 'italic' }}>
             {' '}

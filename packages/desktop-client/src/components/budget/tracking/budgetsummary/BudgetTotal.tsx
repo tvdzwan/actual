@@ -8,7 +8,7 @@ import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 
-import { CellValue } from '#components/spreadsheet/CellValue';
+import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
 import type { Binding, SheetFields } from '#spreadsheet';
 
 type BudgetTotalProps<
@@ -19,6 +19,7 @@ type BudgetTotalProps<
   current: Binding<'tracking-budget', CurrentField>;
   target: Binding<'tracking-budget', TargetField>;
   ProgressComponent: ComponentType<{ current; target }>;
+  invertCurrent?: boolean;
   style?: CSSProperties;
 };
 export function BudgetTotal<
@@ -29,6 +30,7 @@ export function BudgetTotal<
   current,
   target,
   ProgressComponent,
+  invertCurrent = false,
   style,
 }: BudgetTotalProps<CurrentField, TargetField>) {
   return (
@@ -52,7 +54,16 @@ export function BudgetTotal<
           <Trans
             i18nKey="<allocatedAmount /> <italic>of <totalAmount /></italic>"
             components={{
-              allocatedAmount: <CellValue binding={current} type="financial" />,
+              allocatedAmount: (
+                <CellValue binding={current} type="financial">
+                  {props => (
+                    <CellValueText
+                      {...props}
+                      value={invertCurrent ? -props.value || 0 : props.value}
+                    />
+                  )}
+                </CellValue>
+              ),
               italic: (
                 <Text
                   style={{ color: theme.pageTextLight, fontStyle: 'italic' }}
